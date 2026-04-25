@@ -40,6 +40,7 @@ def std_dev(values):
 
 
 def compute_expected_fantasy_points(payload: FantasyPointsRequest):
+   def compute_expected_fantasy_points(payload: FantasyPointsRequest):
     runs = requests.post(FANTASY_URL, json={"values": [m.runs for m in payload.matches]}).json()["result"]
     wickets = requests.post(FANTASY_URL, json={"values": [m.wickets for m in payload.matches]}).json()["result"]
     catches = requests.post(FANTASY_URL, json={"values": [m.catches for m in payload.matches]}).json()["result"]
@@ -49,15 +50,23 @@ def compute_expected_fantasy_points(payload: FantasyPointsRequest):
     fielding_points = catches * payload.fielding_points_per_catch
 
     bat_w, bowl_w, field_w = get_role_weights(payload.role.value)
-
     total = batting_points * bat_w + bowling_points * bowl_w + fielding_points * field_w
+    
+   
+    rating = classify_selection(total)
+    interpretation = (
+        f"{payload.player_name or 'The player'} is projected to score "
+        f"{round(total, 2)} fantasy points as a {payload.role.value}, "
+        f"rated as {rating.lower()}."
+    )
 
+   
     return FantasyPointsResponse(
         player_id=payload.player_id,
         player_name=payload.player_name,
         role=payload.role,
         expected_fantasy_points=round(total, 2),
-        selection_rating=classify_selection(total),
+        selection_rating=rating,
         derived_metrics=DerivedMetrics(
             expected_runs=round(runs, 2),
             expected_wickets=round(wickets, 2),
@@ -69,8 +78,7 @@ def compute_expected_fantasy_points(payload: FantasyPointsRequest):
             weighted_bowling_points=round(bowling_points * bowl_w, 2),
             weighted_fielding_points=round(fielding_points * field_w, 2),
         ),
-        interpretation=""
-    )
+        interpretation=interpretation 
 
 
 def compute_opponent_performance(payload: OpponentPerformanceRequest):
