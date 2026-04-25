@@ -144,24 +144,65 @@ def compute_opponent_performance(payload: OpponentPerformanceRequest):
 def compute_form_trend(payload: FormTrendRequest):
     scores = payload.performance_scores
     n = len(scores)
+    x = list(range(1, n + 1))
 
-    weights = requests.post(TREND_URL, json={"n": n}).json()["result"]
+    response = requests.post(TREND_URL, json={"n": n}, timeout=5)
+    weights = response.json()["result"]
+
+    mean_x = sum(w * xi for xi, w in zip(x, weights))
+    mean_y = sum(w * yi for yi, w in zip(scores, weights))
+
+    var_x = sum(w * (xi - mean_x) ** 2 for xi, w in zip(x, weights))
+    cov_xy = sum(w * (xi - mean_x) * (yi - mean_y) for xi, yi, w in zip(x, scores, weights))
+
+    slope = cov_xy / var_x if var_x != 0 else 0
+    intercept = mean_y - slope * mean_x
+
+    predicted = [intercept + slope * xi for xi in x]
+
+    ss_total = sum(w * (yi - mean_y) ** 2 for yi, w in zip(scores, weights))
+    ss_residual = sum(w * (yi - pi) ** 2 for yi, pi, w in zip(scores, predicted, weights))
+
+    r_squared = 1 - (ss_residual / ss_total) if ss_total != 0 else 1
+    r_squared = max(0, min(1, r_squared))
+
+    normalized_slope = slope / mean_y if mean_y != 0 else 0
+    trend_score = normalized_slope * r_squared
+
+    if trend_score > 0.02:
+        trend_label = "Rising"
+    elif trend_score < -0.02:
+        trend_label = "Declining"
+    else:
+        trend_label = "Stable"
+
+    if r_squared >= 0.7:
+        confidence = "High"
+    elif r_squared >= 0.4:
+        confidence = "Moderate"
+    else:
+        confidence = "Low"
+
+    interpretation = (
+        f"{payload.player_name or 'The player'} is {trend_label.lower()} "
+        f"with {confidence.lower()} confidence over the last {n} matches."
+    )
 
     return FormTrendResponse(
         player_id=payload.player_id,
         player_name=payload.player_name,
-        trend_label="Stable",
-        trend_score=0,
-        slope=0,
-        r_squared=0,
-        confidence="Low",
+        trend_label=trend_label,
+        trend_score=round(trend_score, 4),
+        slope=round(slope, 4),
+        r_squared=round(r_squared, 4),
+        confidence=confidence,
         matches_used=n,
         details=TrendDetails(
-            weights=weights,
-            slope=0,
-            intercept=0,
-            r_squared=0,
-            normalized_slope=0
+            weights=[round(w, 4) for w in weights],
+            slope=round(slope, 4),
+            intercept=round(intercept, 4),
+            r_squared=round(r_squared, 4),
+            normalized_slope=round(normalized_slope, 4)
         ),
-        interpretation=""
+        interpretation=interpretation
     )
