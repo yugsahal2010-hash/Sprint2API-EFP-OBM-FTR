@@ -78,7 +78,9 @@ def compute_expected_fantasy_points(payload: FantasyPointsRequest):
             weighted_bowling_points=round(bowling_points * bowl_w, 2),
             weighted_fielding_points=round(fielding_points * field_w, 2),
         ),
-        interpretation=interpretation 
+        interpretation=interpretation
+      )
+        
 
 
 def compute_opponent_performance(payload: OpponentPerformanceRequest):
