@@ -2,9 +2,9 @@ import requests
 import math
 from schemas import *
 
-FANTASY_URL = "https://fantasy-helper.onrender.com/weighted-average"
-BAYESIAN_URL = "https://bayesian-helper.onrender.com/credibility"
-TREND_URL = "https://trend-helper.onrender.com/weights"
+FANTASY_URL = "https://fantasypointshelperapi.onrender.com/"
+BAYESIAN_URL = "https://opponentbayesian-helper.onrender.com/"
+TREND_URL = "https://formtrend-helper.onrender.com/"
 
 
 def classify_selection(points):
