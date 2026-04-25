@@ -2,7 +2,7 @@ import requests
 import math
 from schemas import *
 
-FANTASY_URL = "https://fantasypointshelperapi.onrender.com/"
+FANTASY_URL = "https://fantasypointshelperapi.onrender.com/weighted-average"
 BAYESIAN_URL = "https://opponentbayesian-helper.onrender.com/"
 TREND_URL = "https://formtrend-helper.onrender.com/"
 
