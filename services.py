@@ -74,40 +74,69 @@ def compute_expected_fantasy_points(payload: FantasyPointsRequest):
 
 
 def compute_opponent_performance(payload: OpponentPerformanceRequest):
+   
     matches = payload.recent_matches[-20:]
     all_scores = [m.score for m in matches]
-    opp_scores = [m.score for m in matches if m.opponent_team == payload.target_opponent]
-
+    opp_scores = [m.score for m in matches if m.opponent_team.strip().upper() == payload.target_opponent.strip().upper()]
     overall_avg = mean(all_scores)
-    overall_std = std_dev(all_scores)
-    opp_avg = mean(opp_scores) if opp_scores else overall_avg
-    opp_std = std_dev(opp_scores) if opp_scores else overall_std
+    overall_std = std_dev(all_scores)    
+    if opp_scores:
+        opp_avg = mean(opp_scores)
+        opp_std = std_dev(opp_scores)
+    else:
+        opp_avg = overall_avg
+        opp_std = overall_std
 
-    credibility = requests.post(BAYESIAN_URL, json={
-        "overall_std": overall_std,
-        "opponent_std": opp_std
-    }).json()["result"]
+    matches_vs_opponent = len(opp_scores)
 
-    opp_weight = len(opp_scores) / (len(opp_scores) + credibility) if opp_scores else 0
+  
+    if opp_std < 0.0001:
+        credibility = 1.0 # Fallback
+    else:
+       
+        try:
+            resp = requests.post(BAYESIAN_URL, json={"overall_std": overall_std, "opponent_std": opp_std}, timeout=5)
+            credibility = resp.json().get("result", 1.0)
+        except:
+            credibility = (overall_std / opp_std) ** 2 if opp_std != 0 else 1.0
+
+   
+    opp_weight = matches_vs_opponent / (matches_vs_opponent + credibility) if matches_vs_opponent > 0 else 0
     overall_weight = 1 - opp_weight
     expected_score = opp_weight * opp_avg + overall_weight * overall_avg
 
+ 
+    expected_variability = math.sqrt(
+        overall_weight * (overall_std ** 2) + opp_weight * (opp_std ** 2)
+    )
+
+    
+    pred = round(expected_score, 2)
+    if pred >= 80: tier = "Elite"
+    elif pred >= 55: tier = "Strong"
+    elif pred >= 35: tier = "Average"
+    elif pred >= 20: tier = "Below Average"
+    else: tier = "Poor"
+
+    interpretation = f"{payload.player_name} is projected at {pred} against {payload.target_opponent}, classified as {tier}."
+
+  
     return OpponentPerformanceResponse(
         player_id=payload.player_id,
         player_name=payload.player_name,
         opponent_team=payload.target_opponent,
-        predicted_score=round(expected_score, 2),
-        performance_tier="Average",
-        interpretation="",
+        predicted_score=pred,
+        performance_tier=tier,
+        interpretation=interpretation,
         calculation_details=CalculationDetails(
             credibility_factor=round(credibility, 4),
             opponent_weight=round(opp_weight, 4),
             overall_weight=round(overall_weight, 4),
             expected_score=round(expected_score, 4),
-            expected_variability=0,
+            expected_variability=round(expected_variability, 4),
             overall_average_score=round(overall_avg, 4),
             opponent_average_score=round(opp_avg, 4),
-            matches_vs_opponent=len(opp_scores),
+            matches_vs_opponent=matches_vs_opponent,
         )
     )
 
