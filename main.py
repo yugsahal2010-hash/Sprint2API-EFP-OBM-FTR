@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from schemas import *
 from services import *
+from fastapi import HTTPException
 
 app = FastAPI()
 
@@ -14,8 +15,11 @@ def health():
 
 @app.post("/expected-fantasy-points", response_model=FantasyPointsResponse)
 def expected_fantasy_points(payload: FantasyPointsRequest):
-    return compute_expected_fantasy_points(payload)
-
+    try:
+        return compute_expected_fantasy_points(payload)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+        
 @app.post("/opponent-bayesian", response_model=OpponentPerformanceResponse)
 def opponent_bayesian(payload: OpponentPerformanceRequest):
     return compute_opponent_performance(payload)
