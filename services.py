@@ -41,12 +41,17 @@ def std_dev(values):
 
 
 def compute_expected_fantasy_points(payload: FantasyPointsRequest):
-    response = requests.post(FANTASY_URL, json={"values": [m.runs for m in payload.matches]})
-    print(response.status_code)
-    print(response.text)
-    runs = response.json()["result"]
-    wickets = requests.post(FANTASY_URL, json={"values": [m.wickets for m in payload.matches]}).json()["result"]
-    catches = requests.post(FANTASY_URL, json={"values": [m.catches for m in payload.matches]}).json()["result"]
+   response = requests.post(FANTASY_URL, json={"values": [m.runs for m in payload.matches]})
+   print("runs:", response.json())
+   runs = response.json()["result"]
+
+   response = requests.post(FANTASY_URL, json={"values": [m.wickets for m in payload.matches]})
+   print("wickets:", response.json())
+   wickets = response.json()["result"]
+
+   response = requests.post(FANTASY_URL, json={"values": [m.catches for m in payload.matches]})
+   print("catches:", response.json())
+   catches = response.json()["result"]
 
     batting_points = runs * payload.batting_points_per_run
     bowling_points = wickets * payload.bowling_points_per_wicket
