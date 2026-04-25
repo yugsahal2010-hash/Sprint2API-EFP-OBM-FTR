@@ -145,7 +145,7 @@ def compute_form_trend(payload: FormTrendRequest):
     scores = payload.performance_scores
     n = len(scores)
     
-    # 1. Validation: Prevent division by zero if no data
+ 
     if n < 2:
         return FormTrendResponse(
             player_id=payload.player_id,
@@ -157,19 +157,19 @@ def compute_form_trend(payload: FormTrendRequest):
             interpretation="Insufficient data for trend analysis."
         )
 
-    # 2. Fetch Weights with error handling
+ 
     try:
         response = requests.post(TREND_URL, json={"n": n}, timeout=5)
-        # Check if the API actually returned a list of numbers
+      
         weights = response.json().get("result")
         if not weights or len(weights) != n:
             raise ValueError("Weight mismatch")
     except Exception as e:
-        # If the API fails, return a safe response instead of crashing
+      
         print(f"DEBUG: Trend API failed: {e}")
         weights = [1.0 / n] * n 
 
-    # ... rest of your math ...
+  
     scores = payload.performance_scores
     n = len(scores)
     x = list(range(1, n + 1))
