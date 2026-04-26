@@ -1,10 +1,7 @@
 import requests
 import math
 from schemas import *
-
-FANTASY_URL = "https://fantasypointshelperapi.onrender.com/weighted-average"
-BAYESIAN_URL = "https://opponentbayesian-helper.onrender.com/credibility"
-TREND_URL = "https://formtrend-helper.onrender.com/weights"
+from config import FANTASY_URL, BAYESIAN_URL, TREND_URL
 
 def classify_selection(points):
     if points >= 80:
