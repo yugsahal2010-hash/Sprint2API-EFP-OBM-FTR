@@ -1,0 +1,53 @@
+{
+  "expected_fantasy_points": {
+    "player_id": "001",
+    "player_name": "Virat",
+    "role": "batter",
+    "matches": [
+      {
+        "runs": 45,
+        "wickets": 0,
+        "catches": 1
+      },
+      {
+        "runs": 60,
+        "wickets": 0,
+        "catches": 0
+      },
+      {
+        "runs": 25,
+        "wickets": 0,
+        "catches": 2
+      }
+    ],
+    "batting_points_per_run": 1,
+    "bowling_points_per_wicket": 25,
+    "fielding_points_per_catch": 8
+  },
+
+  "opponent_bayesian": {
+    "player_id": "001",
+    "player_name": "Virat",
+    "target_opponent": "MI",
+    "recent_matches": [
+      {
+        "score": 50,
+        "opponent_team": "MI"
+      },
+      {
+        "score": 35,
+        "opponent_team": "CSK"
+      },
+      {
+        "score": 65,
+        "opponent_team": "MI"
+      }
+    ]
+  },
+
+  "form_trend": {
+    "player_id": "001",
+    "player_name": "Virat",
+    "performance_scores": [30, 45, 55, 60, 72]
+  }
+}
